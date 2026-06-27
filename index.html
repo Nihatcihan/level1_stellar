@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NovaStellar - Stellar Testnet Wallet Dashboard</title>
+    <meta name="description" content="Stellar Testnet Freighter cüzdan entegrasyonu, bakiye sorgulama ve hızlı XLM transfer paneli.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Interactive Background -->
+    <div id="tsparticles" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; pointer-events: none;"></div>
+    
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="brand">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-meteor"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>NovaStellar</h1>
+                    <span>Stellar Testnet Gateway</span>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="network-badge">
+                    <span class="status-dot green"></span>
+                    <span class="badge-text">Stellar Testnet</span>
+                </div>
+                
+                <button id="btn-theme-toggle" class="btn-icon" title="Temayı Değiştir" style="margin-right: 8px;">
+                    <i class="fa-solid fa-sun"></i>
+                </button>
+                
+                <button id="btn-wallet-toggle" class="btn-wallet-connect">
+                    <i class="fa-solid fa-wallet"></i>
+                    <span id="wallet-toggle-text">Cüzdanı Bağla</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="app-main">
+            <div class="grid-container">
+                <!-- Left Column: Guide & Info -->
+                <section class="card guide-card">
+                    <div class="card-header">
+                        <i class="fa-solid fa-circle-info header-icon"></i>
+                        <h2>Kurulum & Kullanım Rehberi</h2>
+                    </div>
+                    <div class="card-body">
+                        <ol class="setup-steps">
+                            <li>
+                                <div class="step-num">1</div>
+                                <div class="step-content">
+                                    <h3>Freighter Cüzdanını Kurun</h3>
+                                    <p>Tarayıcınıza <a href="https://www.freighter.app/" target="_blank" rel="noopener noreferrer">Freighter uzantısını</a> yükleyin.</p>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="step-num">2</div>
+                                <div class="step-content">
+                                    <h3>Testnet'i Aktif Edin</h3>
+                                    <p>Freighter Ayarlarından (Settings) ağ tipini <strong>Testnet</strong> olarak değiştirin.</p>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="step-num">3</div>
+                                <div class="step-content">
+                                    <h3>Hesabınızı Fonlayın</h3>
+                                    <p>Cüzdan adresinizi kopyalayıp <a href="https://laboratory.stellar.org/#account-creator?network=test" target="_blank" rel="noopener noreferrer">Stellar Friendbot</a> aracılığıyla 10,000 test XLM alın.</p>
+                                </div>
+                            </li>
+                        </ol>
+                        
+                        <div class="info-note">
+                            <i class="fa-solid fa-shield-halved"></i>
+                            <p>Bu uygulama tamamen Stellar Testnet üzerinde çalışmaktadır. Lütfen gerçek varlıklarınızı göndermeyin.</p>
+                        </div>
+
+                        <!-- System Diagnostics Card -->
+                        <div class="diagnostics-panel" style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                            <h4 style="font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                                <i class="fa-solid fa-bug" style="color: var(--primary-hover);"></i> Sistem Teşhis (Diagnostics)
+                            </h4>
+                            <ul style="list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 12.5px;">
+                                <li style="display: flex; justify-content: space-between;">
+                                    <span style="color: var(--text-muted);">Çalışma Protokolü:</span>
+                                    <span id="diag-protocol" style="font-weight: 600; font-family: monospace;">-</span>
+                                </li>
+                                <li style="display: flex; justify-content: space-between;">
+                                    <span style="color: var(--text-muted);">Freighter Eklentisi:</span>
+                                    <span id="diag-freighter" style="font-weight: 600;">-</span>
+                                </li>
+                                <li style="display: flex; justify-content: space-between;">
+                                    <span style="color: var(--text-muted);">window.stellar:</span>
+                                    <span id="diag-stellar" style="font-weight: 600; font-family: monospace;">-</span>
+                                </li>
+                                <li style="display: flex; justify-content: space-between;">
+                                    <span style="color: var(--text-muted);">window.freighterApi:</span>
+                                    <span id="diag-freighter-api" style="font-weight: 600; font-family: monospace;">-</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Right Column: Dashboard -->
+                <div class="dashboard-column">
+                    <!-- Wallet Details Card -->
+                    <section id="card-wallet-details" class="card wallet-card state-disconnected">
+                        <div class="card-body">
+                            <!-- Disconnected State View -->
+                            <div class="state-view disconnected-view">
+                                <div class="wallet-illustration">
+                                    <i class="fa-solid fa-wallet-giftcard"></i>
+                                </div>
+                                <h2>Cüzdanınız Bağlı Değil</h2>
+                                <p>Bakiyenizi görüntülemek ve işlem yapmak için sağ üstten veya aşağıdaki butondan Freighter cüzdanınızı bağlayın.</p>
+                                <button id="btn-wallet-connect-body" class="btn btn-primary btn-large">
+                                    <i class="fa-solid fa-link"></i> Freighter'ı Bağla
+                                </button>
+                            </div>
+
+                            <!-- Connected State View -->
+                            <div class="state-view connected-view">
+                                <div class="wallet-meta">
+                                    <span class="meta-label">Bağlı Hesap</span>
+                                    <div class="address-box">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <svg id="wallet-identicon" width="24" height="24" style="border-radius: var(--radius-sm); display: none; background-color: white;"></svg>
+                                            <span id="txt-wallet-address" class="address-text">G...</span>
+                                        </div>
+                                        <button id="btn-copy-address" class="btn-icon" title="Adresi Kopyala">
+                                            <i class="fa-regular fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="balance-display">
+                                    <span class="balance-label">Kullanılabilir Bakiye</span>
+                                    <div class="balance-amount-wrapper">
+                                        <span id="txt-wallet-balance" class="balance-amount">0.00</span>
+                                        <span class="balance-unit">XLM</span>
+                                        <button id="btn-refresh-balance" class="btn-icon btn-refresh" title="Bakiyeyi Yenile">
+                                            <i class="fa-solid fa-arrows-rotate"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="quick-links">
+                                    <a id="lnk-friendbot" href="#" target="_blank" class="btn btn-secondary">
+                                        <i class="fa-solid fa-faucet"></i> Friendbot ile XLM Al
+                                    </a>
+                                    <button type="button" id="btn-show-qr" class="btn btn-secondary">
+                                        <i class="fa-solid fa-qrcode"></i> QR Kodum
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Transaction Flow Card -->
+                    <section id="card-transaction" class="card tx-card disabled">
+                        <div class="card-header">
+                            <i class="fa-solid fa-paper-plane header-icon"></i>
+                            <h2>XLM Gönder</h2>
+                        </div>
+                        <div class="card-body">
+                            <form id="form-send-tx">
+                                <div class="form-group">
+                                    <label for="input-recipient">Alıcı Stellar Adresi (Public Key)</label>
+                                    <div class="input-wrapper">
+                                        <input type="text" id="input-recipient" placeholder="G... ile başlayan 56 karakterli adres" style="padding-right: 48px;" disabled required>
+                                        <i class="fa-solid fa-key input-icon"></i>
+                                        <button type="button" id="btn-scan-qr" class="btn-input-action-right" title="QR Kod Tara" disabled>
+                                            <i class="fa-solid fa-camera"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="input-amount">Tutar (XLM)</label>
+                                    <div class="input-wrapper">
+                                        <input type="number" id="input-amount" step="0.0000001" min="0.0000001" placeholder="0.00" disabled required>
+                                        <i class="fa-solid fa-coins input-icon"></i>
+                                        <button type="button" id="btn-amount-max" class="btn-input-action" disabled>MAX</button>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="input-memo">Memo (İsteğe Bağlı)</label>
+                                    <div class="input-wrapper">
+                                        <input type="text" id="input-memo" maxlength="28" placeholder="Mesaj veya referans kodu" disabled>
+                                        <i class="fa-solid fa-message input-icon"></i>
+                                    </div>
+                                </div>
+
+                                <button type="submit" id="btn-submit-tx" class="btn btn-primary btn-block" disabled>
+                                    <span>Gönderimi Başlat</span>
+                                    <i class="fa-solid fa-arrow-right"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </section>
+
+                    <!-- Recent Transactions Card -->
+                    <section id="card-transactions-history" class="card tx-history-card disabled">
+                        <div class="card-header">
+                            <i class="fa-solid fa-clock-rotate-left header-icon"></i>
+                            <h2>Son İşlemler (Son 10 Ödeme)</h2>
+                        </div>
+                        <div class="card-body" style="padding: 16px 20px;">
+                            <div id="tx-history-loading" class="tx-history-loading-state hidden" style="text-align: center; padding: 24px; color: var(--text-secondary); font-size: 14px;">
+                                <i class="fa-solid fa-circle-notch spinner" style="margin-right: 8px;"></i> Arama yapılıyor...
+                            </div>
+                            <div id="tx-history-empty" class="tx-history-empty-state" style="text-align: center; padding: 24px; color: var(--text-muted); font-size: 14px;">
+                                <i class="fa-solid fa-receipt" style="display: block; font-size: 28px; margin-bottom: 12px; color: var(--border-color);"></i>
+                                Henüz bir işlem bulunmuyor veya cüzdan bağlı değil.
+                            </div>
+                            <ul id="tx-history-list" class="tx-history-list hidden" style="list-style: none; display: flex; flex-direction: column; gap: 12px; max-height: 380px; overflow-y: auto; padding-right: 4px;">
+                                <!-- Dynamic entries go here -->
+                            </ul>
+                        </div>
+                    </section>
+                </div>
+            </div>
+            
+            <!-- Central Feedback Notification Area -->
+            <section id="feedback-panel" class="card feedback-card hidden">
+                <div class="card-body" id="feedback-content">
+                    <!-- Dynamic status insertion -->
+                </div>
+            </section>
+        </main>
+        
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>&copy; 2026 NovaStellar. Tüm Hakları Saklıdır. Built with Google Antigravity & Stellar SDK.</p>
+        </footer>
+    </div>
+
+    <!-- My QR Code Modal -->
+    <div id="modal-my-qr" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-container card">
+            <div class="card-header">
+                <i class="fa-solid fa-qrcode header-icon"></i>
+                <h2>QR Kodum</h2>
+                <button type="button" class="btn-close-modal" id="btn-close-qr-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="card-body modal-body-center" style="display: flex; flex-direction: column; align-items: center; text-align: center; padding: 24px 20px;">
+                <div class="qr-canvas-wrapper" style="padding: 16px; background-color: white; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); margin-bottom: 20px; display: inline-flex;">
+                    <canvas id="my-qr-canvas"></canvas>
+                </div>
+                <p class="modal-description" style="font-size: 13.5px; color: var(--text-secondary); margin-bottom: 20px;">Bu adrese XLM göndermek veya cüzdanı bağlamak için QR kodu taratın.</p>
+                <div class="address-copy-wrapper" style="display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 14px; background-color: var(--bg-base); border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 8px;">
+                    <span id="txt-my-qr-address" class="address-text-modal" style="font-family: monospace; font-size: 13px; color: var(--text-primary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap; flex-grow: 1; text-align: left;">G...</span>
+                    <button type="button" id="btn-copy-address-modal" class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px; border-radius: var(--radius-sm); white-space: nowrap;">
+                        <i class="fa-regular fa-copy"></i> Kopyala
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Code Scanner Modal -->
+    <div id="modal-qr-scanner" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-container card">
+            <div class="card-header">
+                <i class="fa-solid fa-camera header-icon"></i>
+                <h2>QR Kod Tara</h2>
+                <button type="button" class="btn-close-modal" id="btn-close-scanner-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="card-body" style="padding: 20px 24px;">
+                <div class="scanner-preview-wrapper" style="border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border-color); background-color: var(--bg-base); margin-bottom: 16px; position: relative;">
+                    <div id="scanner-reader" style="width: 100%; aspect-ratio: 1/1; max-width: 320px; margin: 0 auto;"></div>
+                </div>
+                <div class="scanner-controls" style="text-align: center;">
+                    <p class="scanner-status" id="txt-scanner-status" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; font-weight: 500;">Kamera aranıyor...</p>
+                    <div class="fallback-upload-wrapper">
+                        <label for="input-qr-file" class="btn btn-secondary" style="font-size: 13px; cursor: pointer;">
+                            <i class="fa-solid fa-image"></i> Dosyadan Görsel Yükle
+                        </label>
+                        <input type="file" id="input-qr-file" accept="image/*" style="display: none;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <!-- Stellar SDK CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stellar-sdk/10.4.1/stellar-sdk.js"></script>
+    <!-- Freighter API CDN -->
+    <script src="https://unpkg.com/@stellar/freighter-api/build/index.min.js"></script>
+    <!-- QRious CDN for QR Code Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <!-- HTML5 QR Code CDN for Scanning -->
+    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <!-- Feature Enhancements CDNs -->
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jdenticon@3.2.0/dist/jdenticon.min.js"></script>
+    
+    <!-- Core logic -->
+    <script src="app.js?v=9"></script>
+</body>
+</html>
